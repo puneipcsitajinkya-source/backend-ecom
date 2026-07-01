@@ -25,6 +25,27 @@ export class CreateProductDto {
   price: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  mrp?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  discount?: number;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @IsOptional()
+  inStock?: boolean;
+
+  @IsOptional()
+  @IsString()
+  brand?: string;
+
+  @IsOptional()
   @IsString()
   image?: string;
 

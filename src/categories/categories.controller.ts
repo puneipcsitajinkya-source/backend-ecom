@@ -17,14 +17,14 @@ export class CategoriesController {
   }
 
   @Post()
-  create(@Body() dto: { name: string; icon?: string; showOnApp?: boolean }) {
+  create(@Body() dto: { name: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }) {
     return this.categoriesService.create(dto);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() dto: { name?: string; icon?: string; showOnApp?: boolean },
+    @Body() dto: { name?: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean },
   ) {
     return this.categoriesService.update(id, dto);
   }

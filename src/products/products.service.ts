@@ -27,8 +27,22 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async findAll(): Promise<Product[]> {
-    return this.productModel.find().sort({ createdAt: -1 }).exec();
+  async findAll(category?: string, search?: string, inStockOnly?: boolean): Promise<Product[]> {
+    const filter: any = {};
+    if (category && category !== 'All') {
+      filter.category = new RegExp(`^${category.trim()}$`, 'i');
+    }
+    if (search) {
+      filter.$or = [
+        { 'name.en': new RegExp(search, 'i') },
+        { 'name.mr': new RegExp(search, 'i') },
+        { brand: new RegExp(search, 'i') },
+      ];
+    }
+    if (inStockOnly) {
+      filter.inStock = true;
+    }
+    return this.productModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 
   async findOne(id: string): Promise<Product> {

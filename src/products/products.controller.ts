@@ -2,10 +2,11 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -15,8 +16,12 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('inStock') inStock?: string,
+  ) {
+    return this.productsService.findAll(category, search, inStock === 'true');
   }
 
   @Get('stats')
@@ -34,7 +39,7 @@ export class ProductsController {
     return this.productsService.create(dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   update(@Param('id') id: string, @Body() dto: Partial<CreateProductDto>) {
     return this.productsService.update(id, dto);
   }

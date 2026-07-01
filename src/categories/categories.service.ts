@@ -40,15 +40,15 @@ export class CategoriesService implements OnModuleInit {
       const activeCategories = await this.productModel.distinct('category').exec();
       filter.name = { $in: activeCategories };
     }
-    return this.categoryModel.find(filter).sort({ name: 1 }).exec();
+    return this.categoryModel.find(filter).sort({ sortOrder: 1, name: 1 }).exec();
   }
 
-  async create(dto: { name: string; icon?: string; showOnApp?: boolean }): Promise<Category> {
+  async create(dto: { name: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }): Promise<Category> {
     const created = new this.categoryModel(dto);
     return created.save();
   }
 
-  async update(id: string, dto: { name?: string; icon?: string; showOnApp?: boolean }): Promise<Category> {
+  async update(id: string, dto: { name?: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }): Promise<Category> {
     const updated = await this.categoryModel
       .findByIdAndUpdate(id, dto, { new: true })
       .exec();

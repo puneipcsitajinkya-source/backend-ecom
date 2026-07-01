@@ -5,6 +5,15 @@ export type SettingsDocument = Settings & Document;
 
 @Schema({ timestamps: true })
 export class Settings {
+  @Prop({ default: 'FirstMart' })
+  storeName: string;
+
+  @Prop({ default: '10-15 mins' })
+  deliveryTime: string;
+
+  @Prop({ default: 0 })
+  minOrderAmount: number;
+
   @Prop({ default: false })
   deliveryFeeEnabled: boolean;
 

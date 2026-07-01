@@ -23,6 +23,21 @@ export class Product {
   @Prop({ required: true })
   price: number;
 
+  @Prop({ default: 0 })
+  mrp: number;
+
+  @Prop({ default: 0 })
+  discount: number;
+
+  @Prop({ default: '1 pc' })
+  unit: string;
+
+  @Prop({ default: true })
+  inStock: boolean;
+
+  @Prop()
+  brand: string;
+
   @Prop()
   image: string;
 

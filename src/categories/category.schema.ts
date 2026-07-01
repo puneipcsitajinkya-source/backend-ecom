@@ -11,6 +11,12 @@ export class Category {
   @Prop({ default: '🥦' })
   icon: string;
 
+  @Prop()
+  image: string;
+
+  @Prop({ default: 0 })
+  sortOrder: number;
+
   @Prop({ default: true })
   showOnApp: boolean;
 }

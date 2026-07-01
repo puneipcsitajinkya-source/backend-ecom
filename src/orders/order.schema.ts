@@ -23,6 +23,12 @@ export class Order {
   @Prop({ required: true })
   mobile: string;
 
+  @Prop()
+  customerName?: string;
+
+  @Prop()
+  instructions?: string;
+
   @Prop({ default: 0 })
   latitude: number;
 

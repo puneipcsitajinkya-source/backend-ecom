@@ -52,17 +52,36 @@ export class OrdersService {
     delivered: number;
     confirmed: number;
     outForDelivery: number;
+    totalRevenue: number;
+    deliveredRevenue: number;
   }> {
-    const [total, pending, delivered, confirmed, outForDelivery] =
+    const [total, pending, delivered, confirmed, outForDelivery, revenueRes, deliveredRevenueRes] =
       await Promise.all([
         this.orderModel.countDocuments().exec(),
         this.orderModel.countDocuments({ status: OrderStatus.PENDING }).exec(),
         this.orderModel.countDocuments({ status: OrderStatus.DELIVERED }).exec(),
         this.orderModel.countDocuments({ status: OrderStatus.CONFIRMED }).exec(),
-        this.orderModel
-          .countDocuments({ status: OrderStatus.OUT_FOR_DELIVERY })
-          .exec(),
+        this.orderModel.countDocuments({ status: OrderStatus.OUT_FOR_DELIVERY }).exec(),
+        this.orderModel.aggregate([
+          { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        ]).exec(),
+        this.orderModel.aggregate([
+          { $match: { status: OrderStatus.DELIVERED } },
+          { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        ]).exec(),
       ]);
-    return { total, pending, delivered, confirmed, outForDelivery };
+
+    const totalRevenue = revenueRes[0]?.total || 0;
+    const deliveredRevenue = deliveredRevenueRes[0]?.total || 0;
+
+    return {
+      total,
+      pending,
+      delivered,
+      confirmed,
+      outForDelivery,
+      totalRevenue: Number(totalRevenue.toFixed(2)),
+      deliveredRevenue: Number(deliveredRevenue.toFixed(2)),
+    };
   }
 }
