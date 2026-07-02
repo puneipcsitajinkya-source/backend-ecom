@@ -22,6 +22,7 @@ export class SettingsService implements OnModuleInit {
         freeDeliveryThresholdEnabled: false,
         freeDeliveryThreshold: 0,
         contactNumber: '9239321112',
+        defaultLanguage: 'en',
       });
       await defaultSettings.save();
       console.log('🌱 Default settings initialized successfully!');
@@ -41,6 +42,7 @@ export class SettingsService implements OnModuleInit {
         freeDeliveryThresholdEnabled: false,
         freeDeliveryThreshold: 0,
         contactNumber: '9239321112',
+        defaultLanguage: 'en',
       });
       await settings.save();
     } else {
@@ -56,6 +58,10 @@ export class SettingsService implements OnModuleInit {
       }
       if (settings.contactNumber === undefined) {
         settings.contactNumber = '9239321112';
+        modified = true;
+      }
+      if (settings.defaultLanguage === undefined) {
+        settings.defaultLanguage = 'en';
         modified = true;
       }
       if (modified) {
@@ -82,6 +88,7 @@ export class SettingsService implements OnModuleInit {
     if (data.freeDeliveryThresholdEnabled !== undefined) settings.freeDeliveryThresholdEnabled = data.freeDeliveryThresholdEnabled;
     if (data.freeDeliveryThreshold !== undefined) settings.freeDeliveryThreshold = Number(data.freeDeliveryThreshold);
     if (data.contactNumber !== undefined) settings.contactNumber = data.contactNumber;
+    if (data.defaultLanguage !== undefined) settings.defaultLanguage = data.defaultLanguage;
 
     return settings.save();
   }

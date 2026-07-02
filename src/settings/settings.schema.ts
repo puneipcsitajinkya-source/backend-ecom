@@ -40,6 +40,9 @@ export class Settings {
 
   @Prop({ default: '9239321112' })
   contactNumber: string;
+
+  @Prop({ default: 'en' })
+  defaultLanguage: string;
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);
