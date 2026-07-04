@@ -43,6 +43,9 @@ export class Product {
 
   @Prop({ default: 'Vegetables' })
   category: string;
+
+  @Prop()
+  subcategory: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

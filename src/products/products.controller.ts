@@ -18,10 +18,11 @@ export class ProductsController {
   @Get()
   findAll(
     @Query('category') category?: string,
+    @Query('subcategory') subcategory?: string,
     @Query('search') search?: string,
     @Query('inStock') inStock?: string,
   ) {
-    return this.productsService.findAll(category, search, inStock === 'true');
+    return this.productsService.findAll(category, subcategory, search, inStock === 'true');
   }
 
   @Get('stats')

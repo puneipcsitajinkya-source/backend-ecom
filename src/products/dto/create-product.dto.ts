@@ -52,4 +52,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsString()
+  subcategory?: string;
 }

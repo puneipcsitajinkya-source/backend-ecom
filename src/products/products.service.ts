@@ -27,10 +27,13 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async findAll(category?: string, search?: string, inStockOnly?: boolean): Promise<Product[]> {
+  async findAll(category?: string, subcategory?: string, search?: string, inStockOnly?: boolean): Promise<Product[]> {
     const filter: any = {};
     if (category && category !== 'All') {
       filter.category = new RegExp(`^${category.trim()}$`, 'i');
+    }
+    if (subcategory && subcategory !== 'All') {
+      filter.subcategory = new RegExp(`^${subcategory.trim()}$`, 'i');
     }
     if (search) {
       filter.$or = [
@@ -58,6 +61,9 @@ export class ProductsService implements OnModuleInit {
         dto.category = cat.name;
       }
     }
+    if (dto.subcategory) {
+      dto.subcategory = String(dto.subcategory).trim();
+    }
     const created = new this.productModel(dto);
     return created.save();
   }
@@ -68,6 +74,9 @@ export class ProductsService implements OnModuleInit {
       if (cat) {
         dto.category = cat.name;
       }
+    }
+    if (dto.subcategory) {
+      dto.subcategory = String(dto.subcategory).trim();
     }
     const updated = await this.productModel
       .findByIdAndUpdate(id, dto, { new: true })
