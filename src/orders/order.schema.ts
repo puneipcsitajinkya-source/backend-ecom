@@ -8,6 +8,7 @@ export enum OrderStatus {
   CONFIRMED = 'confirmed',
   OUT_FOR_DELIVERY = 'out_for_delivery',
   DELIVERED = 'delivered',
+  CLOSED = 'closed',
 }
 
 export class OrderItem {

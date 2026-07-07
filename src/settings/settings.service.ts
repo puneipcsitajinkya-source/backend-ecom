@@ -43,6 +43,7 @@ export class SettingsService implements OnModuleInit {
         freeDeliveryThreshold: 0,
         contactNumber: '9239321112',
         defaultLanguage: 'en',
+        checkoutDisabled: false,
       });
       await settings.save();
     } else {
@@ -62,6 +63,10 @@ export class SettingsService implements OnModuleInit {
       }
       if (settings.defaultLanguage === undefined) {
         settings.defaultLanguage = 'en';
+        modified = true;
+      }
+      if (settings.checkoutDisabled === undefined) {
+        settings.checkoutDisabled = false;
         modified = true;
       }
       if (modified) {
@@ -89,6 +94,7 @@ export class SettingsService implements OnModuleInit {
     if (data.freeDeliveryThreshold !== undefined) settings.freeDeliveryThreshold = Number(data.freeDeliveryThreshold);
     if (data.contactNumber !== undefined) settings.contactNumber = data.contactNumber;
     if (data.defaultLanguage !== undefined) settings.defaultLanguage = data.defaultLanguage;
+    if (data.checkoutDisabled !== undefined) settings.checkoutDisabled = data.checkoutDisabled;
 
     return settings.save();
   }

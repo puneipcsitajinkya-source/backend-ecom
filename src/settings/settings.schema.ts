@@ -43,6 +43,9 @@ export class Settings {
 
   @Prop({ default: 'en' })
   defaultLanguage: string;
+
+  @Prop({ default: false })
+  checkoutDisabled: boolean;
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);
