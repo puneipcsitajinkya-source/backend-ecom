@@ -36,12 +36,12 @@ export class ProductsController {
   }
 
   @Post()
-  create(@Body() dto: CreateProductDto) {
+  create(@Body() dto: any) {
     return this.productsService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateProductDto>) {
+  update(@Param('id') id: string, @Body() dto: any) {
     return this.productsService.update(id, dto);
   }
 

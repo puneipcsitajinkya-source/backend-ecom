@@ -54,6 +54,7 @@ export class CreateProductDto {
   category?: string;
 
   @IsOptional()
+  // Accept either subcategory id string or name: validation as string remains
   @IsString()
   subcategory?: string;
 }

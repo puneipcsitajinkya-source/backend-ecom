@@ -17,12 +17,12 @@ export class SubcategoriesController {
   }
 
   @Post()
-  async create(@Body() dto: { parentCategoryId: string; name: string; icon?: string; sortOrder?: number; showOnApp?: boolean }) {
+  async create(@Body() dto: { parentCategoryId: string; name: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }) {
     return this.subcategoriesService.create(dto);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: { name?: string; icon?: string; sortOrder?: number; showOnApp?: boolean }) {
+  async update(@Param('id') id: string, @Body() dto: { name?: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }) {
     return this.subcategoriesService.update(id, dto);
   }
 

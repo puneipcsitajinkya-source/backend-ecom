@@ -50,18 +50,19 @@ export class SubcategoriesService {
     return s;
   }
 
-  async create(dto: { parentCategoryId: string; name: string; icon?: string; sortOrder?: number; showOnApp?: boolean }) {
+  async create(dto: { parentCategoryId: string; name: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }) {
     const created = new this.subcategoryModel({
       parentCategoryId: new Types.ObjectId(dto.parentCategoryId),
       name: dto.name.trim(),
       icon: dto.icon || '🏷️',
+      image: dto.image?.trim() || undefined,
       sortOrder: dto.sortOrder || 0,
       showOnApp: dto.showOnApp !== false,
     });
     return created.save();
   }
 
-  async update(id: string, dto: { name?: string; icon?: string; sortOrder?: number; showOnApp?: boolean }) {
+  async update(id: string, dto: { name?: string; icon?: string; image?: string; sortOrder?: number; showOnApp?: boolean }) {
     const updated = await this.subcategoryModel.findByIdAndUpdate(id, dto, { new: true }).exec();
     if (!updated) throw new NotFoundException('Subcategory not found');
     return updated;

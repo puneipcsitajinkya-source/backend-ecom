@@ -14,6 +14,9 @@ export class Subcategory {
   @Prop({ default: '🏷️' })
   icon: string;
 
+  @Prop()
+  image?: string;
+
   @Prop({ default: 0 })
   sortOrder: number;
 
