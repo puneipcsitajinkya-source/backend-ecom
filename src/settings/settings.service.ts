@@ -26,6 +26,10 @@ export class SettingsService implements OnModuleInit {
       });
       await defaultSettings.save();
       console.log('🌱 Default settings initialized successfully!');
+    } else {
+      // Run migrations on startup
+      await this.getSettings();
+      console.log('🔄 Settings migrations checked and run successfully!');
     }
   }
 
@@ -69,6 +73,54 @@ export class SettingsService implements OnModuleInit {
         settings.checkoutDisabled = false;
         modified = true;
       }
+      if ((settings as any).sliderImage1 === undefined || (settings as any).sliderImage1 === 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&q=80') {
+        (settings as any).sliderImage1 = 'https://images.unsplash.com/photo-1506617498300-38435a0950e8?w=800&q=80';
+        modified = true;
+      }
+      if ((settings as any).sliderImage2 === undefined || (settings as any).sliderImage2 === 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=80') {
+        (settings as any).sliderImage2 = 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80';
+        modified = true;
+      }
+      if ((settings as any).sliderImage3 === undefined || (settings as any).sliderImage3 === 'https://images.unsplash.com/photo-1516594798947-e65505dbb29d?w=600&q=80') {
+        (settings as any).sliderImage3 = 'https://images.unsplash.com/photo-1607349913338-fca6f7fc42d0?w=800&q=80';
+        modified = true;
+      }
+      if ((settings as any).sliderTitle1 === undefined) {
+        (settings as any).sliderTitle1 = 'Upto 50% Off Today';
+        modified = true;
+      }
+      if ((settings as any).sliderSubtitle1 === undefined) {
+        (settings as any).sliderSubtitle1 = 'Get amazing discounts on all premium groceries & daily essentials';
+        modified = true;
+      }
+      if ((settings as any).sliderBadge1 === undefined) {
+        (settings as any).sliderBadge1 = 'BEST OFFER';
+        modified = true;
+      }
+      if ((settings as any).sliderTitle2 === undefined) {
+        (settings as any).sliderTitle2 = 'Low Price Guaranteed';
+        modified = true;
+      }
+      if ((settings as any).sliderSubtitle2 === undefined) {
+        (settings as any).sliderSubtitle2 = 'Unbeatable prices on fresh vegetables, milk, bread & eggs';
+        modified = true;
+      }
+      if ((settings as any).sliderBadge2 === undefined) {
+        (settings as any).sliderBadge2 = 'LOWEST PRICE';
+        modified = true;
+      }
+      if ((settings as any).sliderTitle3 === undefined) {
+        (settings as any).sliderTitle3 = 'Mega Savings Week';
+        modified = true;
+      }
+      if ((settings as any).sliderSubtitle3 === undefined) {
+        (settings as any).sliderSubtitle3 = 'Save big on your monthly grocery list with super saver packs';
+        modified = true;
+      }
+      if ((settings as any).sliderBadge3 === undefined) {
+        (settings as any).sliderBadge3 = 'SUPER VALUE';
+        modified = true;
+      }
       if (modified) {
         await settings.save();
       }
@@ -84,6 +136,9 @@ export class SettingsService implements OnModuleInit {
     }
     
     // Explicitly update all fields
+    if (data.storeName !== undefined) settings.storeName = data.storeName;
+    if (data.deliveryTime !== undefined) settings.deliveryTime = data.deliveryTime;
+    if (data.minOrderAmount !== undefined) settings.minOrderAmount = Number(data.minOrderAmount);
     if (data.deliveryFeeEnabled !== undefined) settings.deliveryFeeEnabled = data.deliveryFeeEnabled;
     if (data.deliveryFee !== undefined) settings.deliveryFee = Number(data.deliveryFee);
     if (data.gstEnabled !== undefined) settings.gstEnabled = data.gstEnabled;
@@ -95,6 +150,18 @@ export class SettingsService implements OnModuleInit {
     if (data.contactNumber !== undefined) settings.contactNumber = data.contactNumber;
     if (data.defaultLanguage !== undefined) settings.defaultLanguage = data.defaultLanguage;
     if (data.checkoutDisabled !== undefined) settings.checkoutDisabled = data.checkoutDisabled;
+    if ((data as any).sliderImage1 !== undefined) (settings as any).sliderImage1 = (data as any).sliderImage1;
+    if ((data as any).sliderImage2 !== undefined) (settings as any).sliderImage2 = (data as any).sliderImage2;
+    if ((data as any).sliderImage3 !== undefined) (settings as any).sliderImage3 = (data as any).sliderImage3;
+    if ((data as any).sliderTitle1 !== undefined) (settings as any).sliderTitle1 = (data as any).sliderTitle1;
+    if ((data as any).sliderSubtitle1 !== undefined) (settings as any).sliderSubtitle1 = (data as any).sliderSubtitle1;
+    if ((data as any).sliderBadge1 !== undefined) (settings as any).sliderBadge1 = (data as any).sliderBadge1;
+    if ((data as any).sliderTitle2 !== undefined) (settings as any).sliderTitle2 = (data as any).sliderTitle2;
+    if ((data as any).sliderSubtitle2 !== undefined) (settings as any).sliderSubtitle2 = (data as any).sliderSubtitle2;
+    if ((data as any).sliderBadge2 !== undefined) (settings as any).sliderBadge2 = (data as any).sliderBadge2;
+    if ((data as any).sliderTitle3 !== undefined) (settings as any).sliderTitle3 = (data as any).sliderTitle3;
+    if ((data as any).sliderSubtitle3 !== undefined) (settings as any).sliderSubtitle3 = (data as any).sliderSubtitle3;
+    if ((data as any).sliderBadge3 !== undefined) (settings as any).sliderBadge3 = (data as any).sliderBadge3;
 
     return settings.save();
   }

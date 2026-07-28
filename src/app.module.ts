@@ -9,6 +9,7 @@ import { OrdersModule } from './orders/orders.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { SubcategoriesModule } from './subcategories/subcategories.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ dotenv.config();
     CategoriesModule,
     SettingsModule,
     SubcategoriesModule,
+    FeedbackModule,
   ],
 })
 export class AppModule {}
