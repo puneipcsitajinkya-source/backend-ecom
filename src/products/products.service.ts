@@ -25,8 +25,26 @@ export class ProductsService implements OnModuleInit {
         }
       }
       console.log('🔄 Synced categories from products database successfully.');
+
+      // Self-healing migration for existing products without the images array
+      const legacyProducts = await this.productModel.find({
+        $or: [
+          { images: { $exists: false } },
+          { images: { $size: 0 } }
+        ],
+        image: { $exists: true, $ne: '' }
+      }).exec();
+
+      if (legacyProducts.length > 0) {
+        console.log(`🧹 Found ${legacyProducts.length} legacy products without images array. Migrating...`);
+        for (const prod of legacyProducts) {
+          prod.images = [prod.image];
+          await prod.save();
+        }
+        console.log('✅ Migrated legacy products successfully.');
+      }
     } catch (err) {
-      console.error('❌ Failed to sync categories from products database:', err);
+      console.error('❌ Failed to sync categories or migrate products database:', err);
     }
   }
 
@@ -144,9 +162,19 @@ export class ProductsService implements OnModuleInit {
       dto.inStock = Number(dto.stock) > 0;
     }
 
-    // Normalize image arrays
-    if (Array.isArray(dto.image) && dto.image.length > 0) {
-      dto.image = dto.image[0];
+    // Normalize image and images array
+    if (dto.images && Array.isArray(dto.images)) {
+      dto.images = dto.images.filter((img: any) => typeof img === 'string' && img.trim() !== '');
+      if (!dto.image && dto.images.length > 0) {
+        dto.image = dto.images[0];
+      }
+    } else if (dto.image && typeof dto.image === 'string') {
+      dto.images = [dto.image];
+    } else if (Array.isArray(dto.image) && dto.image.length > 0) {
+      dto.images = dto.image.filter((img: any) => typeof img === 'string' && img.trim() !== '');
+      dto.image = dto.images[0] || '';
+    } else {
+      dto.images = [];
     }
 
     // Trim category strings

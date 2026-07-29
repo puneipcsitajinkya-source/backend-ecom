@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, ValidateNested, IsNotEmpty } from 'class-validator';
+import { IsString, IsNumber, IsOptional, ValidateNested, IsNotEmpty, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ProductNameDto {
@@ -48,6 +48,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 
   @IsOptional()
   @IsString()

@@ -492,6 +492,7 @@ async function seed() {
     console.log('🚀 Seeding products...');
     const productsWithTimestamps = products.map((p) => ({
       ...p,
+      images: p.image ? [p.image] : [],
       createdAt: now,
       updatedAt: now,
     }));

@@ -141,6 +141,7 @@ async function run() {
       inStock: typeof doc.inStock === 'boolean' ? doc.inStock : (doc.stock != null ? Number(doc.stock) > 0 : !!doc.inStock),
       brand: doc.brand || '',
       image: image || undefined,
+      images: image ? [image] : [],
       category: categoryDoc?.name || 'General',
       subcategory: subcategoryId ? subcategoryId : undefined,
       createdAt: doc.createdAt || now,
