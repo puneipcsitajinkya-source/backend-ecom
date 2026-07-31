@@ -14,6 +14,9 @@ export class Category {
   @Prop()
   image: string;
 
+  @Prop({ type: [String], default: [] })
+  images: string[];
+
   @Prop({ default: 0 })
   sortOrder: number;
 

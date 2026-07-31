@@ -53,6 +53,35 @@ export class SettingsService implements OnModuleInit {
     } else {
       // Migrate existing document if fields are missing
       let modified = false;
+      if (!settings.banners || settings.banners.length === 0) {
+        settings.banners = [
+          {
+            title: (settings as any).sliderTitle1 || 'Upto 50% Off Today',
+            subtitle: (settings as any).sliderSubtitle1 || 'Get amazing discounts on all premium groceries & daily essentials',
+            badge: (settings as any).sliderBadge1 || 'BEST OFFER',
+            image: (settings as any).sliderImage1 || 'https://images.unsplash.com/photo-1506617498300-38435a0950e8?w=800&q=80',
+            link: '',
+            backgroundColor: '#a21caf',
+          },
+          {
+            title: (settings as any).sliderTitle2 || 'Low Price Guaranteed',
+            subtitle: (settings as any).sliderSubtitle2 || 'Unbeatable prices on fresh vegetables, milk, bread & eggs',
+            badge: (settings as any).sliderBadge2 || 'LOWEST PRICE',
+            image: (settings as any).sliderImage2 || 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80',
+            link: '',
+            backgroundColor: '#15803d',
+          },
+          {
+            title: (settings as any).sliderTitle3 || 'Mega Savings Week',
+            subtitle: (settings as any).sliderSubtitle3 || 'Save big on your monthly grocery list with super saver packs',
+            badge: (settings as any).sliderBadge3 || 'SUPER VALUE',
+            image: (settings as any).sliderImage3 || 'https://images.unsplash.com/photo-1607349913338-fca6f7fc42d0?w=800&q=80',
+            link: '',
+            backgroundColor: '#ea580c',
+          },
+        ];
+        modified = true;
+      }
       if (settings.freeDeliveryThresholdEnabled === undefined) {
         settings.freeDeliveryThresholdEnabled = false;
         modified = true;
@@ -150,6 +179,29 @@ export class SettingsService implements OnModuleInit {
     if (data.contactNumber !== undefined) settings.contactNumber = data.contactNumber;
     if (data.defaultLanguage !== undefined) settings.defaultLanguage = data.defaultLanguage;
     if (data.checkoutDisabled !== undefined) settings.checkoutDisabled = data.checkoutDisabled;
+    if (data.banners !== undefined) {
+      settings.banners = data.banners;
+
+      // Sync first 3 banners back to legacy columns to prevent breaking older clients
+      if (data.banners[0]) {
+        (settings as any).sliderTitle1 = data.banners[0].title || '';
+        (settings as any).sliderSubtitle1 = data.banners[0].subtitle || '';
+        (settings as any).sliderBadge1 = data.banners[0].badge || '';
+        (settings as any).sliderImage1 = data.banners[0].image || '';
+      }
+      if (data.banners[1]) {
+        (settings as any).sliderTitle2 = data.banners[1].title || '';
+        (settings as any).sliderSubtitle2 = data.banners[1].subtitle || '';
+        (settings as any).sliderBadge2 = data.banners[1].badge || '';
+        (settings as any).sliderImage2 = data.banners[1].image || '';
+      }
+      if (data.banners[2]) {
+        (settings as any).sliderTitle3 = data.banners[2].title || '';
+        (settings as any).sliderSubtitle3 = data.banners[2].subtitle || '';
+        (settings as any).sliderBadge3 = data.banners[2].badge || '';
+        (settings as any).sliderImage3 = data.banners[2].image || '';
+      }
+    }
     if ((data as any).sliderImage1 !== undefined) (settings as any).sliderImage1 = (data as any).sliderImage1;
     if ((data as any).sliderImage2 !== undefined) (settings as any).sliderImage2 = (data as any).sliderImage2;
     if ((data as any).sliderImage3 !== undefined) (settings as any).sliderImage3 = (data as any).sliderImage3;

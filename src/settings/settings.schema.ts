@@ -82,6 +82,16 @@ export class Settings {
 
   @Prop({ default: false })
   checkoutDisabled: boolean;
+
+  @Prop({ type: [Object], default: [] })
+  banners: {
+    title?: string;
+    subtitle?: string;
+    badge?: string;
+    image: string;
+    link?: string;
+    backgroundColor?: string;
+  }[];
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);
