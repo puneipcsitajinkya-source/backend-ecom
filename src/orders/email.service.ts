@@ -14,8 +14,8 @@ export class EmailService {
   private initTransporter() {
     const host = process.env.SMTP_HOST;
     const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
+    const user = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : undefined;
+    const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim().replace(/\s+/g, '') : undefined;
 
     // Check if configuration is provided and it's not the placeholder
     if (host && user && pass && user !== 'your-email@gmail.com' && pass !== 'your-app-password') {
@@ -77,6 +77,10 @@ export class EmailService {
             <tr>
               <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Customer Mobile:</td>
               <td style="padding: 6px 0; font-weight: bold; color: #a855f7; font-size: 14px; text-align: right;">📱 ${order.mobile || 'No contact'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Payment Method:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #16a34a; font-size: 14px; text-align: right;">💵 ${order.paymentMethod || 'Pay on Delivery (Cash / UPI - GPay, PhonePe)'}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b; font-size: 14px;">Delivery Address:</td>
@@ -189,6 +193,43 @@ export class EmailService {
         return true;
       } catch (err) {
         console.error(`❌ EmailService: Failed to send email for order #${orderId}:`, err.message);
+        if (err.message?.includes('535') || err.message?.includes('BadCredentials') || err.message?.includes('Password not accepted')) {
+          console.warn('💡 EmailService Tip: Gmail SMTP requires a 16-character App Password generated at https://myaccount.google.com/apppasswords with 2-Step Verification enabled.');
+        }
+
+        if (!usingEthereal) {
+          console.log('🔄 EmailService: Primary SMTP failed. Attempting fallback via Ethereal Email test preview...');
+          try {
+            if (!this.etherealTransporter) {
+              const testAccount = await nodemailer.createTestAccount();
+              this.etherealTransporter = nodemailer.createTransport({
+                host: 'smtp.ethereal.email',
+                port: 587,
+                secure: false,
+                auth: {
+                  user: testAccount.user,
+                  pass: testAccount.pass,
+                },
+              });
+            }
+            const fallbackInfo = await this.etherealTransporter.sendMail({
+              from: 'FirstMart Store <noreply@firstmart.com>',
+              to: adminEmail,
+              subject: emailSubject,
+              html: emailHtml,
+            });
+            const previewUrl = nodemailer.getTestMessageUrl(fallbackInfo);
+            console.log(`
+===================================================
+✉️ EmailService: Order notification sent via Ethereal Fallback!
+🔗 Email Preview Link: ${previewUrl}
+===================================================
+`);
+          } catch (etherealFallbackErr) {
+            console.warn('⚠️ EmailService: Ethereal fallback also failed:', etherealFallbackErr.message);
+          }
+        }
+
         this.logFallback(order, orderId);
         return false;
       }
@@ -204,6 +245,7 @@ export class EmailService {
 💡 FALLBACK LOG: NEW ORDER DETAILS FOR #${orderId}
 ===================================================
 📱 Mobile: ${order.mobile}
+💵 Payment Method: ${order.paymentMethod || 'Cash on Delivery'}
 🏠 Address: ${order.address || 'N/A'}
 📍 Location: https://www.google.com/maps?q=${order.latitude},${order.longitude}
 🛒 Items: ${JSON.stringify(order.items.map((i) => `${i.name} x${i.quantity}`))}

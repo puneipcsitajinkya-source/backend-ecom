@@ -4,6 +4,7 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const categories = [
   {
@@ -471,15 +472,84 @@ async function seed() {
 
     // 1. Clear Collections
     console.log('🧹 Clearing collections...');
-    await mongoose.connection.collection('products').deleteMany({});
-    await mongoose.connection.collection('categories').deleteMany({});
-    await mongoose.connection.collection('settings').deleteMany({});
-    await mongoose.connection.collection('orders').deleteMany({});
+    const collections = ['products', 'categories', 'settings', 'orders', 'stores', 'users', 'subcategories', 'feedbacks'];
+    for (const coll of collections) {
+      try {
+        await mongoose.connection.collection(coll).deleteMany({});
+      } catch (e) {
+        // collection might not exist yet, that's fine
+      }
+    }
     console.log('✅ Collections cleared.');
 
-    // 2. Insert Categories
-    console.log('🚀 Seeding categories...');
     const now = new Date();
+
+    // 2. Insert Default Stores
+    console.log('🚀 Seeding stores...');
+    const storeData = [
+      {
+        name: 'Main Market Hub',
+        address: '123 Downtown Street, City Center',
+        latitude: 21.1458,
+        longitude: 79.0882,
+        deliveryRadius: 15,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        name: 'West End Delivery Center',
+        address: '456 Suburb Boulevard, West End',
+        latitude: 18.5204,
+        longitude: 73.8567,
+        deliveryRadius: 10,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      }
+    ];
+    const insertedStoresRes = await mongoose.connection.collection('stores').insertMany(storeData);
+    const store1Id = insertedStoresRes.insertedIds[0];
+    const store2Id = insertedStoresRes.insertedIds[1];
+    console.log('🎉 Seeded stores.');
+
+    // 3. Insert Default Users
+    console.log('🚀 Seeding users...');
+    const superadminPassword = bcrypt.hashSync('admin123', 10);
+    const storeAdminPassword = bcrypt.hashSync('store123', 10);
+    const userData = [
+      {
+        username: 'admin',
+        password: superadminPassword,
+        role: 'superadmin',
+        name: 'Super Administrator',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        username: 'store1',
+        password: storeAdminPassword,
+        role: 'store_admin',
+        store: store1Id,
+        name: 'Main Market Manager',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        username: 'store2',
+        password: storeAdminPassword,
+        role: 'store_admin',
+        store: store2Id,
+        name: 'West End Manager',
+        createdAt: now,
+        updatedAt: now,
+      }
+    ];
+    await mongoose.connection.collection('users').insertMany(userData);
+    console.log('🎉 Seeded admin and manager accounts.');
+
+    // 4. Insert Categories
+    console.log('🚀 Seeding categories...');
     const categoriesWithTimestamps = categories.map((c) => ({
       ...c,
       createdAt: now,
@@ -488,21 +558,38 @@ async function seed() {
     await mongoose.connection.collection('categories').insertMany(categoriesWithTimestamps);
     console.log(`🎉 Seeded ${categories.length} categories.`);
 
-    // 3. Insert Products
+    // 5. Insert Products (Distributed between Store 1 and Store 2)
     console.log('🚀 Seeding products...');
-    const productsWithTimestamps = products.map((p) => ({
+    const productsWithTimestamps = products.map((p, index) => ({
       ...p,
       images: p.image ? [p.image] : [],
+      store: index % 2 === 0 ? store1Id : store2Id,
       createdAt: now,
       updatedAt: now,
     }));
     await mongoose.connection.collection('products').insertMany(productsWithTimestamps);
-    console.log(`🎉 Seeded ${products.length} products.`);
+    console.log(`🎉 Seeded ${products.length} products distributed between stores.`);
 
-    // 4. Insert Settings
-    console.log('🚀 Seeding default settings...');
-    const defaultSettings = {
-      storeName: 'FirstMart',
+    // 6. Insert Settings (Global and Store-specific)
+    console.log('🚀 Seeding settings...');
+    const globalSettings = {
+      storeName: 'FirstMart Central',
+      deliveryTime: '15-20 mins',
+      minOrderAmount: 0,
+      deliveryFeeEnabled: true,
+      deliveryFee: 40,
+      gstEnabled: false,
+      gstPercentage: 0,
+      handlingFeeEnabled: true,
+      handlingFee: 5,
+      freeDeliveryThresholdEnabled: true,
+      freeDeliveryThreshold: 300,
+      contactNumber: '9239321112',
+      createdAt: now,
+      updatedAt: now,
+    };
+    const store1Settings = {
+      storeName: 'FirstMart Main Market',
       deliveryTime: '10-15 mins',
       minOrderAmount: 0,
       deliveryFeeEnabled: true,
@@ -510,15 +597,33 @@ async function seed() {
       gstEnabled: false,
       gstPercentage: 0,
       handlingFeeEnabled: true,
-      handlingFee: 5,
+      handlingFee: 3,
       freeDeliveryThresholdEnabled: true,
       freeDeliveryThreshold: 200,
       contactNumber: '9239321112',
+      store: store1Id,
       createdAt: now,
       updatedAt: now,
     };
-    await mongoose.connection.collection('settings').insertOne(defaultSettings);
-    console.log('🎉 Seeded settings.');
+    const store2Settings = {
+      storeName: 'FirstMart West End',
+      deliveryTime: '15-25 mins',
+      minOrderAmount: 0,
+      deliveryFeeEnabled: true,
+      deliveryFee: 45,
+      gstEnabled: false,
+      gstPercentage: 0,
+      handlingFeeEnabled: true,
+      handlingFee: 5,
+      freeDeliveryThresholdEnabled: true,
+      freeDeliveryThreshold: 250,
+      contactNumber: '9239321112',
+      store: store2Id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await mongoose.connection.collection('settings').insertMany([globalSettings, store1Settings, store2Settings]);
+    console.log('🎉 Seeded global and store-specific settings.');
 
     console.log('🎉 Seeding successfully completed!');
   } catch (error) {

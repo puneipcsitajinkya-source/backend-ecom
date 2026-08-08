@@ -10,6 +10,9 @@ import { CategoriesModule } from './categories/categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { SubcategoriesModule } from './subcategories/subcategories.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { StoresModule } from './stores/stores.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 dotenv.config();
 
@@ -26,6 +29,9 @@ dotenv.config();
     SettingsModule,
     SubcategoriesModule,
     FeedbackModule,
+    StoresModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

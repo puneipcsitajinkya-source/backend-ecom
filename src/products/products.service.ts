@@ -48,8 +48,11 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async findAll(category?: string, subcategory?: string, search?: string, inStockOnly?: boolean): Promise<Product[]> {
+  async findAll(category?: string, subcategory?: string, search?: string, inStockOnly?: boolean, store?: string): Promise<Product[]> {
     const filter: any = {};
+    if (store) {
+      filter.store = new Types.ObjectId(store);
+    }
     if (category && category !== 'All') {
       filter.category = new RegExp(`^${category.trim()}$`, 'i');
     }
@@ -91,7 +94,7 @@ export class ProductsService implements OnModuleInit {
   async create(dto: CreateProductDto): Promise<Product> {
     dto = this.normalizeProductInput(dto);
     if (dto.category) {
-      const cat = await this.categoriesService.ensureCategoryExists(dto.category);
+      const cat = await this.categoriesService.ensureCategoryExists(dto.category, dto.store);
       if (cat) {
         dto.category = cat.name;
       }
@@ -116,7 +119,7 @@ export class ProductsService implements OnModuleInit {
   async update(id: string, dto: Partial<CreateProductDto>): Promise<Product> {
     dto = this.normalizeProductInput(dto);
     if (dto.category) {
-      const cat = await this.categoriesService.ensureCategoryExists(dto.category);
+      const cat = await this.categoriesService.ensureCategoryExists(dto.category, dto.store);
       if (cat) {
         dto.category = cat.name;
       }
@@ -132,7 +135,7 @@ export class ProductsService implements OnModuleInit {
       }
     }
     const updated = await this.productModel
-      .findByIdAndUpdate(id, dto, { new: true })
+      .findByIdAndUpdate(id, dto, { new: true, returnDocument: 'after' })
       .exec();
     if (!updated) throw new NotFoundException('Product not found');
     return updated;
@@ -190,8 +193,9 @@ export class ProductsService implements OnModuleInit {
     if (!res) throw new NotFoundException('Product not found');
   }
 
-  async getStats(): Promise<{ total: number }> {
-    const total = await this.productModel.countDocuments().exec();
+  async getStats(store?: string): Promise<{ total: number }> {
+    const filter: any = store ? { store: new Types.ObjectId(store) } : {};
+    const total = await this.productModel.countDocuments(filter).exec();
     return { total };
   }
 }

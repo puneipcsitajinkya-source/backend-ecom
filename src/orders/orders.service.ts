@@ -1,19 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Order, OrderDocument, OrderStatus } from './order.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { EmailService } from './email.service';
+import { StoresService } from '../stores/stores.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
-    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     private readonly emailService: EmailService,
+    private readonly storesService: StoresService,
   ) {}
 
-  async create(dto: CreateOrderDto): Promise<Order> {
-    const order = new this.orderModel(dto);
+  async create(dto: any): Promise<Order> {
+    const orderData = { ...dto };
+    if (!orderData.store && orderData.latitude && orderData.longitude) {
+      const nearest = await this.storesService.findNearest(orderData.latitude, orderData.longitude);
+      if (nearest.store) {
+        orderData.store = (nearest.store as any)._id;
+      }
+    }
+    const order = new this.orderModel(orderData);
     const savedOrder = await order.save();
     
     // Trigger email notification asynchronously to avoid blocking the client response
@@ -24,29 +33,39 @@ export class OrdersService {
     return savedOrder;
   }
 
-  async findAll(): Promise<Order[]> {
-    return this.orderModel.find().sort({ createdAt: -1 }).exec();
+  async findAll(store?: string): Promise<Order[]> {
+    const filter = store ? { store: new Types.ObjectId(store) } : {};
+    return this.orderModel.find(filter).populate('store').sort({ createdAt: -1 }).exec();
   }
 
   async findByCustomer(mobile: string): Promise<Order[]> {
-    return this.orderModel.find({ mobile }).sort({ createdAt: -1 }).exec();
+    return this.orderModel.find({ mobile }).populate('store').sort({ createdAt: -1 }).exec();
   }
 
-  async findOne(id: string): Promise<Order> {
-    const order = await this.orderModel.findById(id).exec();
+  async findOne(id: string, store?: string): Promise<Order> {
+    const filter: any = { _id: id };
+    if (store) {
+      filter.store = new Types.ObjectId(store);
+    }
+    const order = await this.orderModel.findOne(filter).populate('store').exec();
     if (!order) throw new NotFoundException('Order not found');
     return order;
   }
 
-  async updateStatus(id: string, status: OrderStatus): Promise<Order> {
+  async updateStatus(id: string, status: OrderStatus, store?: string): Promise<Order> {
+    const filter: any = { _id: id };
+    if (store) {
+      filter.store = new Types.ObjectId(store);
+    }
     const order = await this.orderModel
-      .findByIdAndUpdate(id, { status }, { new: true })
+      .findOneAndUpdate(filter, { status }, { new: true, returnDocument: 'after' })
+      .populate('store')
       .exec();
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) throw new NotFoundException('Order not found or access denied');
     return order;
   }
 
-  async getStats(): Promise<{
+  async getStats(store?: string): Promise<{
     total: number;
     pending: number;
     delivered: number;
@@ -55,18 +74,32 @@ export class OrdersService {
     totalRevenue: number;
     deliveredRevenue: number;
   }> {
+    const countFilter = (status?: OrderStatus) => {
+      const f: any = {};
+      if (store) f.store = new Types.ObjectId(store);
+      if (status) f.status = status;
+      return f;
+    };
+
+    const revMatch: any = {};
+    if (store) revMatch.store = new Types.ObjectId(store);
+
+    const delRevMatch: any = { status: OrderStatus.DELIVERED };
+    if (store) delRevMatch.store = new Types.ObjectId(store);
+
     const [total, pending, delivered, confirmed, outForDelivery, revenueRes, deliveredRevenueRes] =
       await Promise.all([
-        this.orderModel.countDocuments().exec(),
-        this.orderModel.countDocuments({ status: OrderStatus.PENDING }).exec(),
-        this.orderModel.countDocuments({ status: OrderStatus.DELIVERED }).exec(),
-        this.orderModel.countDocuments({ status: OrderStatus.CONFIRMED }).exec(),
-        this.orderModel.countDocuments({ status: OrderStatus.OUT_FOR_DELIVERY }).exec(),
+        this.orderModel.countDocuments(countFilter()).exec(),
+        this.orderModel.countDocuments(countFilter(OrderStatus.PENDING)).exec(),
+        this.orderModel.countDocuments(countFilter(OrderStatus.DELIVERED)).exec(),
+        this.orderModel.countDocuments(countFilter(OrderStatus.CONFIRMED)).exec(),
+        this.orderModel.countDocuments(countFilter(OrderStatus.OUT_FOR_DELIVERY)).exec(),
         this.orderModel.aggregate([
+          { $match: revMatch },
           { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]).exec(),
         this.orderModel.aggregate([
-          { $match: { status: OrderStatus.DELIVERED } },
+          { $match: delRevMatch },
           { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]).exec(),
       ]);

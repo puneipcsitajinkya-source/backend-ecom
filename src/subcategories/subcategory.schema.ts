@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type SubcategoryDocument = Subcategory & Document;
 
 @Schema({ timestamps: true })
 export class Subcategory {
-  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Category', required: true })
   parentCategoryId: Types.ObjectId;
 
   @Prop({ required: true, trim: true })
@@ -25,6 +25,9 @@ export class Subcategory {
 
   @Prop({ default: true })
   showOnApp: boolean;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Store', required: false })
+  store?: Types.ObjectId;
 }
 
 export const SubcategorySchema = SchemaFactory.createForClass(Subcategory);

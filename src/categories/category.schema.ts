@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type CategoryDocument = Category & Document;
 
 @Schema({ timestamps: true })
 export class Category {
-  @Prop({ required: true, unique: true, trim: true })
+  @Prop({ required: true, trim: true })
   name: string;
 
   @Prop({ default: '🥦' })
@@ -22,6 +22,11 @@ export class Category {
 
   @Prop({ default: true })
   showOnApp: boolean;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Store', required: false })
+  store?: Types.ObjectId;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
+CategorySchema.index({ name: 1, store: 1 }, { unique: true });
+

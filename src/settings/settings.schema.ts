@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type SettingsDocument = Settings & Document;
 
@@ -92,6 +92,9 @@ export class Settings {
     link?: string;
     backgroundColor?: string;
   }[];
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Store', required: false })
+  store?: Types.ObjectId;
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);

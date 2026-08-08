@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Category, CategoryDocument } from './category.schema';
 import { Product, ProductDocument } from '../products/product.schema';
 
@@ -47,24 +47,32 @@ export class CategoriesService implements OnModuleInit {
     }
   }
 
-  async findAll(hasProducts?: boolean, showOnApp?: boolean): Promise<Category[]> {
+  async findAll(hasProducts?: boolean, showOnApp?: boolean, store?: string): Promise<Category[]> {
     const filter: any = {};
     if (showOnApp !== undefined) {
       filter.showOnApp = showOnApp;
     }
+    if (store) {
+      filter.$or = [
+        { store: new Types.ObjectId(store) },
+        { store: null },
+        { store: { $exists: false } }
+      ];
+    }
     if (hasProducts) {
-      const activeCategories = await this.productModel.distinct('category').exec();
+      const productFilter: any = store ? { store: new Types.ObjectId(store) } : {};
+      const activeCategories = await this.productModel.distinct('category', productFilter).exec();
       filter.name = { $in: activeCategories };
     }
     return this.categoryModel.find(filter).sort({ sortOrder: 1, name: 1 }).exec();
   }
 
-  async create(dto: { name: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean }): Promise<Category> {
+  async create(dto: { name: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean; store?: string }): Promise<Category> {
     const normalized = { ...dto } as any;
     if (normalized.images && Array.isArray(normalized.images)) {
       normalized.images = normalized.images.filter((img: any) => typeof img === 'string' && img.trim() !== '');
       if (!normalized.image && normalized.images.length > 0) {
-        normalized.image = normalized.images[0];
+         normalized.image = normalized.images[0];
       }
     } else if (normalized.image && typeof normalized.image === 'string') {
       normalized.images = [normalized.image];
@@ -74,11 +82,14 @@ export class CategoriesService implements OnModuleInit {
     } else {
       normalized.images = [];
     }
+    if (normalized.store) {
+      normalized.store = new Types.ObjectId(normalized.store);
+    }
     const created = new this.categoryModel(normalized);
     return created.save();
   }
 
-  async update(id: string, dto: { name?: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean }): Promise<Category> {
+  async update(id: string, dto: { name?: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean; store?: string }): Promise<Category> {
     const normalized = { ...dto } as any;
     if (normalized.images !== undefined || normalized.image !== undefined) {
       if (normalized.images && Array.isArray(normalized.images)) {
@@ -95,8 +106,11 @@ export class CategoriesService implements OnModuleInit {
         normalized.images = [];
       }
     }
+    if (normalized.store) {
+      normalized.store = new Types.ObjectId(normalized.store);
+    }
     const updated = await this.categoryModel
-      .findByIdAndUpdate(id, normalized, { new: true })
+      .findByIdAndUpdate(id, normalized, { new: true, returnDocument: 'after' })
       .exec();
     if (!updated) throw new NotFoundException('Category not found');
     return updated;
@@ -107,16 +121,31 @@ export class CategoriesService implements OnModuleInit {
     if (!res) throw new NotFoundException('Category not found');
   }
 
-  async ensureCategoryExists(name: string): Promise<Category | null> {
+  async ensureCategoryExists(name: string, store?: string): Promise<Category | null> {
     const trimmedName = name.trim();
     if (!trimmedName) return null;
-    let category = await this.categoryModel
-      .findOne({ name: { $regex: new RegExp(`^${trimmedName}$`, 'i') } })
-      .exec();
+    const filter: any = { name: { $regex: new RegExp(`^${trimmedName}$`, 'i') } };
+    if (store) {
+      filter.store = new Types.ObjectId(store);
+    } else {
+      filter.$or = [{ store: null }, { store: { $exists: false } }];
+    }
+    let category = await this.categoryModel.findOne(filter).exec();
     if (!category) {
-      category = new this.categoryModel({ name: trimmedName, icon: '🏷️' });
+      category = new this.categoryModel({
+        name: trimmedName,
+        icon: '🏷️',
+        store: store ? new Types.ObjectId(store) : undefined
+      });
       await category.save();
     }
     return category;
   }
+
+  async findOne(id: string): Promise<Category> {
+    const category = await this.categoryModel.findById(id).exec();
+    if (!category) throw new NotFoundException('Category not found');
+    return category;
+  }
 }
+

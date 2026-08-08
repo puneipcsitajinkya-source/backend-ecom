@@ -29,17 +29,26 @@ export class SubcategoriesService implements OnModuleInit {
     }
   }
 
-  async findByCategory(parentCategoryId: string) {
-    const resolvedParentId = await this.resolveCategoryId(parentCategoryId);
+  async findByCategory(parentCategoryId: string, store?: string) {
+    const resolvedParentId = await this.resolveCategoryId(parentCategoryId, store);
     if (!resolvedParentId) return [];
 
+    const filter: any = { parentCategoryId: resolvedParentId };
+    if (store) {
+      filter.$or = [
+        { store: new Types.ObjectId(store) },
+        { store: null },
+        { store: { $exists: false } }
+      ];
+    }
+
     return this.subcategoryModel
-      .find({ parentCategoryId: resolvedParentId })
+      .find(filter)
       .sort({ sortOrder: 1, name: 1 })
       .exec();
   }
 
-  private async resolveCategoryId(input: string): Promise<Types.ObjectId | null> {
+  private async resolveCategoryId(input: string, store?: string): Promise<Types.ObjectId | null> {
     const value = input?.trim();
     if (!value) return null;
 
@@ -47,18 +56,34 @@ export class SubcategoriesService implements OnModuleInit {
       return new Types.ObjectId(value);
     }
 
+    const filter: any = {
+      name: { $regex: `^${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+    };
+    if (store) {
+      filter.$or = [
+        { store: new Types.ObjectId(store) },
+        { store: null },
+        { store: { $exists: false } }
+      ];
+    }
+
     const category = await this.categoryModel
-      .findOne({
-        name: { $regex: `^${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
-      })
+      .findOne(filter)
       .exec();
 
     return category?._id ? new Types.ObjectId(category._id) : null;
   }
 
-  async findAll(showOnApp?: boolean) {
+  async findAll(showOnApp?: boolean, store?: string) {
     const filter: any = {};
     if (showOnApp !== undefined) filter.showOnApp = showOnApp;
+    if (store) {
+      filter.$or = [
+        { store: new Types.ObjectId(store) },
+        { store: null },
+        { store: { $exists: false } }
+      ];
+    }
     return this.subcategoryModel.find(filter).sort({ sortOrder: 1, name: 1 }).exec();
   }
 
@@ -68,7 +93,7 @@ export class SubcategoriesService implements OnModuleInit {
     return s;
   }
 
-  async create(dto: { parentCategoryId: string; name: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean }) {
+  async create(dto: { parentCategoryId: string; name: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean; store?: string }) {
     const data = { ...dto } as any;
     if (data.images && Array.isArray(data.images)) {
       data.images = data.images.filter((img: any) => typeof img === 'string' && img.trim() !== '');
@@ -84,7 +109,7 @@ export class SubcategoriesService implements OnModuleInit {
       data.images = [];
     }
 
-    const created = new this.subcategoryModel({
+    const subcategoryData: any = {
       parentCategoryId: new Types.ObjectId(data.parentCategoryId),
       name: data.name.trim(),
       icon: data.icon || '🏷️',
@@ -92,11 +117,17 @@ export class SubcategoriesService implements OnModuleInit {
       images: data.images,
       sortOrder: data.sortOrder || 0,
       showOnApp: data.showOnApp !== false,
-    });
+    };
+
+    if (data.store) {
+      subcategoryData.store = new Types.ObjectId(data.store);
+    }
+
+    const created = new this.subcategoryModel(subcategoryData);
     return created.save();
   }
 
-  async update(id: string, dto: { name?: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean }) {
+  async update(id: string, dto: { name?: string; icon?: string; image?: string; images?: string[]; sortOrder?: number; showOnApp?: boolean; store?: string }) {
     const data = { ...dto } as any;
     if (data.images !== undefined || data.image !== undefined) {
       if (data.images && Array.isArray(data.images)) {
@@ -113,8 +144,11 @@ export class SubcategoriesService implements OnModuleInit {
         data.images = [];
       }
     }
+    if (data.store) {
+      data.store = new Types.ObjectId(data.store);
+    }
 
-    const updated = await this.subcategoryModel.findByIdAndUpdate(id, data, { new: true }).exec();
+    const updated = await this.subcategoryModel.findByIdAndUpdate(id, data, { new: true, returnDocument: 'after' }).exec();
     if (!updated) throw new NotFoundException('Subcategory not found');
     return updated;
   }

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type OrderDocument = Order & Document;
 
@@ -60,6 +60,12 @@ export class Order {
 
   @Prop()
   address?: string;
+
+  @Prop({ default: 'Cash on Delivery' })
+  paymentMethod?: string;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Store', required: false })
+  store?: Types.ObjectId;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
